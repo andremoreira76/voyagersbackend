@@ -6,4 +6,4 @@ logs/
 *.log
 dist/
 build/
-coverage/
+coverage/ 
