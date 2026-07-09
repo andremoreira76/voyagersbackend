@@ -8,7 +8,7 @@ const db = require('./database.js');
 
 
 app.get('/', (req, res) => {
-  res.send('Hello, World!');
+  res.send('Olá Mundo!');
 });
 
 
