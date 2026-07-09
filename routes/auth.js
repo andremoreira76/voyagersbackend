@@ -6,6 +6,29 @@ const router = express.Router();
 
 const db = require("../database");
 
+// Auth Login
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Realiza o login do usuário
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               usuario:
+ *                 type: string
+ *               senha:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token de acesso
+ */
 router.post("/login", async (req, res) => {
 
     try {
