@@ -193,24 +193,74 @@ router.get('/', async (req, res) => {
   })
    // Reset password
    /**
- * @swagger  
-* /reset-password:
+ * @swagger
+ * /usuarios/reset-password:
  *   post:
- *     summary: resetar senha do usuário
+ *     summary: Reseta a senha do usuário
  *     tags:
  *       - Usuarios
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - usuario_email
+ *             properties:
+ *               usuario_email:
+ *                 type: string
+ *                 format: email
+ *                 example: andre@email.com
  *     responses:
  *       200:
- *         description: resetar senha do usuário
+ *         description: Senha resetada com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucesso:
+ *                   type: boolean
+ *                   example: true
+ *                 mensagem:
+ *                   type: string
+ *                   example: Senha resetada com sucesso.
+ *       400:
+ *         description: Dados inválidos.
+ *       404:
+ *         description: Usuário não encontrado.
+ *       500:
+ *         description: Erro interno do servidor.
  */
 
   router.post('/reset-password', async (req, res) => {
     try {
       const { usuario_email } = req.body;
+
+      if (!usuario_email) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'Email do usuário é obrigatório.'
+        });
+      }
+
       const bcrypt = require("bcrypt");
       const novaSenha = Math.random().toString(36).slice(-8);
-      const senhaHash = await bcrypt.hash(novaSenha, 10); 
-      result = await db.query('UPDATE usuarios SET usuario_senha = ? WHERE usuario_email = ?', [senhaHash, usuario_email]);  
+      const senhaHash = await bcrypt.hash(novaSenha, 10);
+      const [result] = await db.query('UPDATE usuarios SET usuario_senha = ? WHERE usuario_email = ?', [senhaHash, usuario_email]);
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          sucesso: false,
+          mensagem: 'Usuário não encontrado.'
+        });
+      }
+
+      res.status(200).json({
+        sucesso: true,
+        mensagem: 'Senha resetada com sucesso.'
+      });
     } catch (erro) {
       console.error(erro);
       res.status(500).json({
