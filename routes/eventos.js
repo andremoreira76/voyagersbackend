@@ -264,7 +264,15 @@ router.get('/', async (req, res) => {
       router.put('/:cidade/:uf/:idevento/previsao', async (req, res) => {
         try {
           const { cidade, uf } = req.params;
-          const idevento = Number(req.params.idevento);
+          const [existeEvento] = await db.query('select * from evento_previsao  where evento_previsao_eventoid = ?', [req.params.idevento]);
+          if (existeEvento.length === 0) {
+            return res.status(404).json({ error: 'Evento não encontrado' });
+          }
+          const dataHoje = new Date().toISOString().split('T')[0];
+          const dataAtual = existeEvento[0].evento_previsao_atualizacao.toISOString().split('T')[0];
+          if (dataAtual === dataHoje) {            
+            return res.status(400).json({ error: 'A previsão do tempo já foi atualizada hoje' });
+          }
           const response = await fetch(`https://api.hgbrasil.com/weather?format=json-cors&key=6bd9592b&city_name=${cidade},${uf}`);
           const data = await response.json();
           const filtered= {};
@@ -277,16 +285,7 @@ router.get('/', async (req, res) => {
           filtered.min = data.results.forecast[0].min + '°C';
           filtered.max = data.results.forecast[0].max + '°C';
           filtered.probabilidade_chuva = data.results.forecast[0].rain_probability + '%';
-          const [existeEvento] = await db.query('select * from evento_previsao  where evento_previsao_eventoid = ?', [req.params.idevento]);
-          if (existeEvento.length === 0) {
-            return res.status(404).json({ error: 'Evento não encontrado' });
-          }
-          const dataHoje = new Date().toISOString().split('T')[0];
-          const dataAtual = existeEvento[0].evento_previsao_atualizacao.toISOString().split('T')[0];
-          if (dataAtual === dataHoje) {
-            return res.status(400).json({ error: 'A previsão do tempo já foi atualizada hoje' });
-          }
-          console.log('Data atual do evento -> ' + dataAtual + 'Data de hoje -> ' + new Date().toDateString());
+          //console.log('Data atual do evento -> ' + dataAtual + 'Data de hoje -> ' + new Date().toDateString());
          
           const [result] = await db.query(
             'UPDATE evento_previsao ' +
