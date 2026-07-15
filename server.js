@@ -10,9 +10,6 @@ const apoioRoutes = require('./routes/apoio');
 const app = express();
 const port = 3000;
 
-const iniciarEventos = require('./jobs/eventos');
-
-iniciarEventos();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
