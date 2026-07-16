@@ -6,10 +6,16 @@ const usuariosRoutes = require('./routes/usuarios');
 const eventosRoutes = require('./routes/eventos');
 const authRoutes = require('./routes/auth');
 const apoioRoutes = require('./routes/apoio');
+const cors = require("cors");
 
 const app = express();
 const port = 3000;
 
+app.use(cors({
+    origin: "http://localhost",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
