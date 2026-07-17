@@ -156,7 +156,7 @@ router.get('/', async (req, res) => {
       if (existe.length > 0) {
         return res.status(409).json({
             sucesso: false,
-            mensagem: "Usuário já cadastrado"
+            mensagem: "Nome, usuário e email devem ser únicos. Já existe um usuário com esses dados."
         });
       }    
       
