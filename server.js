@@ -11,8 +11,25 @@ const cors = require("cors");
 const app = express();
 const port = 3000;
 
+const allowedOrigins = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://vps68790.publiccloud.com.br",
+    "https://vps68790.publiccloud.com.br"
+];
+
 app.use(cors({
-    origin: "http://localhost",
+    origin: function (origin, callback) {
+
+        // Permite requisições sem Origin (Postman, curl, apps)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error("Origem não permitida pelo CORS."));
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
