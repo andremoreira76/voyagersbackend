@@ -42,7 +42,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/usuarios', usuariosRoutes);
 app.use('/eventos', eventosRoutes);
 app.use('/', authRoutes);
-app.use('/', apoioRoutes);
+app.use('/apoio', apoioRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello, World!');

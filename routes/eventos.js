@@ -245,9 +245,9 @@ router.get('/', async (req, res) => {
  *           type: integer
  *     responses:
  *       200:
- *         description: Previsão do tempo para a cidade 
+ *         description: Previsão do tempo o evento 
  *       404:
- *         description: Cidade não encontrada
+ *         description: Evento não encontrado
  */   
       router.put('/:idevento/previsao', async (req, res) => {
         try {
