@@ -231,24 +231,12 @@ router.get('/', async (req, res) => {
   // previsao do tempo atual
          /**
  * @swagger
- * /eventos/{cidade}/{uf}/{idevento}/previsao:
+ * /eventos/{idevento}/previsao:
  *   put:
  *     summary: Atualiza a previsão do tempo para uma cidade e evento
  *     tags:
  *       - Eventos 
  *     parameters:
- *       - in: path
- *         name: cidade
- *         description: Nome da cidade
- *         required: true
- *         schema:
- *           type: string
- *       - in: path
- *         name: uf
- *         description: Sigla do estado
- *         required: true
- *         schema:
- *           type: string
  *       - in: path
  *         name: idevento
  *         description: ID do evento
@@ -261,9 +249,9 @@ router.get('/', async (req, res) => {
  *       404:
  *         description: Cidade não encontrada
  */   
-      router.put('/:cidade/:uf/:idevento/previsao', async (req, res) => {
+      router.put('/:idevento/previsao', async (req, res) => {
         try {
-          const { cidade, uf } = req.params;
+          
           const [existeEvento] = await db.query('select * from evento_previsao  where evento_previsao_eventoid = ?', [req.params.idevento]);
           if (existeEvento.length === 0) {
             return res.status(404).json({ error: 'Evento não encontrado' });
@@ -273,6 +261,9 @@ router.get('/', async (req, res) => {
           if (dataAtual === dataHoje) {            
             return res.status(400).json({ error: 'A previsão do tempo já foi atualizada hoje' });
           }
+          const evento = await db.query('select * from eventos where evento_id = ?', [req.params.idevento]);
+          const cidade = evento[0][0].evento_cidade;
+          const uf = evento[0][0].evento_uf;  
           const response = await fetch(`https://api.hgbrasil.com/weather?format=json-cors&key=6bd9592b&city_name=${cidade},${uf}`);
           const data = await response.json();
           const filtered= {};
