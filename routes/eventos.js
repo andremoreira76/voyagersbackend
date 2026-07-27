@@ -28,6 +28,197 @@ router.get('/', async (req, res) => {
         });
       }
       });
+
+// POST - Criar novo evento
+/**
+ * @swagger
+ * /eventos/criar-evento:
+ *   post:
+ *     summary: Cadastra um novo evento
+ *     tags:
+ *       - Eventos
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - evento_nome
+ *               - evento_datainicio
+ *               - evento_datafim
+ *             properties:
+ *               evento_nome:
+ *                 type: string
+ *                 example: Festival de Verão
+ *               evento_descricao:
+ *                 type: string
+ *                 example: Evento comunitário com atrações e alimentação.
+ *               evento_empresaid:
+ *                 type: integer
+ *                 example: 1
+ *               evento_filialid:
+ *                 type: integer
+ *                 example: 1
+ *               evento_datainicio:
+ *                 type: string
+ *                 format: date
+ *                 example: "2026-12-10"
+ *               evento_datafim:
+ *                 type: string
+ *                 format: date
+ *                 example: "2026-12-12"
+ *               evento_datalimiteinscricao:
+ *                 type: string
+ *                 format: date
+ *                 example: "2026-12-01"
+ *               evento_status:
+ *                 type: string
+ *                 example: ATIVO
+ *     responses:
+ *       201:
+ *         description: Evento criado com sucesso.
+ *       400:
+ *         description: Dados inválidos.
+ *       500:
+ *         description: Erro interno do servidor.
+ */
+router.post('/criar-evento', async (req, res) => {
+  try {
+    const {
+      evento_nome,
+      evento_descricao,
+      evento_empresaid = 1,
+      evento_filialid = 1,
+      evento_datainicio,
+      evento_datafim,
+      evento_datalimiteinscricao,
+      evento_horainicialacesso,
+      evento_horafinalacesso,
+      evento_horainicialsaida,
+      evento_horafinalsaida,
+      evento_tipoevento,
+      evento_valor,
+      evento_valorcrianca,
+      evento_vagas,
+      evento_podebarraca,
+      evento_podepet,
+      evento_podesomalto,
+      evento_horasilencioinicial,
+      evento_horasilenciofinal,
+      evento_tipopagamento,
+      evento_tipocobranca,
+      evento_idadecrianca,
+      evento_logotipo,
+      evento_local,
+      evento_endereco,
+      evento_cidade,
+      evento_uf,
+      evento_latitude,
+      evento_longitude,
+      evento_status = 'ATIVO',
+      evento_responsavel,
+      evento_foneresponsavel,
+      evento_responsavelid
+    } = req.body;
+
+    if (!evento_nome || !evento_datainicio || !evento_datafim) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'Nome, data de início e data de fim são obrigatórios.'
+      });
+    }
+
+    const [result] = await db.query(
+      `INSERT INTO eventos (
+        evento_nome,
+        evento_descricao,
+        evento_empresaid,
+        evento_filialid,
+        evento_datainicio,
+        evento_datafim,
+        evento_datalimiteinscricao,
+        evento_horainicialacesso,
+        evento_horafinalacesso,
+        evento_horainicialsaida,
+        evento_horafinalsaida,
+        evento_tipoevento,
+        evento_valor,
+        evento_valorcrianca,
+        evento_vagas,
+        evento_podebarraca,
+        evento_podepet,
+        evento_podesomalto,
+        evento_horasilencioinicial,
+        evento_horasilenciofinal,
+        evento_tipopagamento,
+        evento_tipocobranca,
+        evento_idadecrianca,
+        evento_logotipo,
+        evento_local,
+        evento_endereco,
+        evento_cidade,
+        evento_uf,
+        evento_latitude,
+        evento_longitude,
+        evento_status,
+        evento_responsavel,
+        evento_foneresponsavel,
+        evento_responsavelid
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )`,
+      [
+        evento_nome,
+        evento_descricao ?? null,
+        evento_empresaid,
+        evento_filialid,
+        evento_datainicio,
+        evento_datafim,
+        evento_datalimiteinscricao ?? null,
+        evento_horainicialacesso ?? null,
+        evento_horafinalacesso ?? null,
+        evento_horainicialsaida ?? null,
+        evento_horafinalsaida ?? null,
+        evento_tipoevento ?? null,
+        evento_valor ?? null,
+        evento_valorcrianca ?? null,
+        evento_vagas ?? null,
+        evento_podebarraca ?? null,
+        evento_podepet ?? null,
+        evento_podesomalto ?? null,
+        evento_horasilencioinicial ?? null,
+        evento_horasilenciofinal ?? null,
+        evento_tipopagamento ?? null,
+        evento_tipocobranca ?? null,
+        evento_idadecrianca ?? null,
+        evento_logotipo ?? null,
+        evento_local ?? null,
+        evento_endereco ?? null,
+        evento_cidade ?? null,
+        evento_uf ?? null,
+        evento_latitude ?? null,
+        evento_longitude ?? null,
+        evento_status,
+        evento_responsavel ?? null,
+        evento_foneresponsavel ?? null,
+        evento_responsavelid ?? null
+      ]
+    );
+
+    res.status(201).json({
+      sucesso: true,
+      mensagem: 'Evento criado com sucesso.',
+      evento_id: result.insertId
+    });
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro ao criar evento.',
+      erro: erro.message
+    });
+  }
+});
+
 // get eventos ativos
 /**
  * @swagger
