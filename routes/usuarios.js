@@ -274,4 +274,91 @@ router.get('/', async (req, res) => {
       });
     }
   });
+/**
+ * @swagger
+ * /usuarios/update-location:
+ *   post:
+ *     summary: Atualiza a localização do usuário
+ *     description: Atualiza as coordenadas geográficas de um usuário existente.
+ *     tags:
+ *       - Usuarios
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - usuario_id
+ *               - latitude
+ *               - longitude
+ *             properties:
+ *               usuario_id:
+ *                 type: integer
+ *                 example: 1
+ *               latitude:
+ *                 type: number
+ *                 format: float
+ *                 example: -23.550520
+ *               longitude:
+ *                 type: number
+ *                 format: float
+ *                 example: -46.633303
+ *     responses:
+ *       200:
+ *         description: Localização atualizada com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucesso:
+ *                   type: boolean
+ *                   example: true
+ *                 mensagem:
+ *                   type: string
+ *                   example: Localização atualizada com sucesso.
+ *       400:
+ *         description: Dados inválidos.
+ *       404:
+ *         description: Usuário não encontrado.
+ *       500:
+ *         description: Erro interno do servidor.
+ */
+
+  // atualiza coordenadas do usuário
+  router.post('/update-location', async (req, res) => {
+    try {
+      const { usuario_id, latitude, longitude } = req.body;
+
+      if (!usuario_id || !latitude || !longitude) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'Dados inválidos.'
+        });
+      }
+
+      const [result] = await db.query('UPDATE usuarios SET usuario_latitude = ?, usuario_longitude = ? WHERE usuario_id = ?', [latitude, longitude, usuario_id]);
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          sucesso: false,
+          mensagem: 'Usuário não encontrado.'
+        });
+      }
+
+      res.status(200).json({
+        sucesso: true,
+        mensagem: 'Localização atualizada com sucesso.'
+      });
+    } catch (erro) {
+      console.error(erro);
+      res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro ao atualizar localização.',
+        erro: erro.message
+      });
+    }
+  });
+
   module.exports = router;
