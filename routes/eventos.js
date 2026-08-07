@@ -14,6 +14,15 @@ const db = require('../database.js');
  *     responses:
  *       200:
  *         description: Lista de eventos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 eventos:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Evento'
  */
 router.get('/', async (req, res) => {
       try {
@@ -42,42 +51,24 @@ router.get('/', async (req, res) => {
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - evento_nome
- *               - evento_datainicio
- *               - evento_datafim
- *             properties:
- *               evento_nome:
- *                 type: string
- *                 example: Festival de Verão
- *               evento_descricao:
- *                 type: string
- *                 example: Evento comunitário com atrações e alimentação.
- *               evento_empresaid:
- *                 type: integer
- *                 example: 1
- *               evento_filialid:
- *                 type: integer
- *                 example: 1
- *               evento_datainicio:
- *                 type: string
- *                 format: date
- *                 example: "2026-12-10"
- *               evento_datafim:
- *                 type: string
- *                 format: date
- *                 example: "2026-12-12"
- *               evento_datalimiteinscricao:
- *                 type: string
- *                 format: date
- *                 example: "2026-12-01"
- *               evento_status:
- *                 type: string
- *                 example: ATIVO
+ *             $ref: '#/components/schemas/EventoInput'
  *     responses:
  *       201:
  *         description: Evento criado com sucesso.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucesso:
+ *                   type: boolean
+ *                   example: true
+ *                 mensagem:
+ *                   type: string
+ *                   example: Evento criado com sucesso.
+ *                 evento_id:
+ *                   type: integer
+ *                   example: 1
  *       400:
  *         description: Dados inválidos.
  *       500:
@@ -230,6 +221,12 @@ router.post('/criar-evento', async (req, res) => {
  *     responses:
  *       200:
  *         description: Lista de eventos ativos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Evento'
  */
       router.get('/ativos', async (req, res) => {
       try {
@@ -267,6 +264,10 @@ router.post('/criar-evento', async (req, res) => {
  *     responses:
  *       200:
  *         description: Evento encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Evento'
  *       404:
  *         description: Evento não encontrado
  */   
