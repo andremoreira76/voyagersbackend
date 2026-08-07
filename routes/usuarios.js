@@ -212,6 +212,10 @@ router.get('/', async (req, res) => {
  *                 type: string
  *                 format: email
  *                 example: andre@email.com
+ *               usuario_nova_senha:
+ *                 type: string
+ *                 format: password
+ *                 example: novaSenha123
  *     responses:
  *       200:
  *         description: Senha resetada com sucesso.
@@ -234,9 +238,9 @@ router.get('/', async (req, res) => {
  *         description: Erro interno do servidor.
  */
 
-  router.post('/reset-password', async (req, res) => {
+  router.post('/reset-password', async (req,res) => {
     try {
-      const { usuario_email } = req.body;
+      const { usuario_email, usuario_nova_senha  } = req.body;      
 
       if (!usuario_email) {
         return res.status(400).json({
@@ -246,7 +250,7 @@ router.get('/', async (req, res) => {
       }
 
       const bcrypt = require("bcrypt");
-      const novaSenha = Math.random().toString(36).slice(-8);
+      const novaSenha = usuario_nova_senha;
       const senhaHash = await bcrypt.hash(novaSenha, 10);
       const [result] = await db.query('UPDATE usuarios SET usuario_senha = ? WHERE usuario_email = ?', [senhaHash, usuario_email]);
 
