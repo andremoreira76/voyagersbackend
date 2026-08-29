@@ -361,4 +361,44 @@ router.get('/', async (req, res) => {
     }
   });
 
+  /**
+   * @swagger
+   * /usuarios/user/{username}:
+   *   get:
+   *     summary: Buscar usuário por nome de usuário
+   *     parameters:
+   *       - name: username
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   */
+  router.get('/user/:username', async (req, res) => {
+    try {
+      const { username } = req.params;
+
+      const [rows] = await db.query('SELECT * FROM usuarios WHERE usuario_usuario = ?', [username]);
+
+      if (rows.length === 0) {
+        return res.status(404).json({
+          sucesso: false,
+          mensagem: 'Usuário não encontrado.'
+        });
+      }
+
+      res.status(200).json({
+        sucesso: true,
+        mensagem: 'Usuário encontrado.',
+        dados: rows[0]
+      });
+    } catch (erro) {
+      console.error(erro);
+      res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro ao buscar usuário.',
+        erro: erro.message
+      });
+    }
+  });
+
   module.exports = router;
