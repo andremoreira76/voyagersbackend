@@ -385,45 +385,81 @@ router.post('/criar-evento', async (req, res) => {
       // previsao do tempo atual
          /**
  * @swagger
- * /eventos/{cidade}/{uf}/previsao:
+ * /eventos/{idevento}/previsao:
  *   get:
  *     summary: Retorna a previsão do tempo para uma cidade
  *     tags:
  *       - Eventos 
  *     parameters:
  *       - in: path
- *         name: cidade
- *         description: Nome da cidade
+ *         name: idevento
+ *         description: ID do evento
  *         required: true
  *         schema:
- *           type: string
- *       - in: path
- *         name: uf
- *         description: Sigla do estado
- *         required: true
- *         schema:
- *           type: string
+ *           type: integer          
  *     responses:
  *       200:
  *         description: Previsão do tempo para a cidade 
  *       404:
  *         description: Cidade não encontrada
  */   
-      router.get('/:cidade/:uf/previsao', async (req, res) => {
-        const { cidade, uf } = req.params;
-        const response = await fetch(`https://api.hgbrasil.com/weather?format=json-cors&key=6bd9592b&city_name=${cidade},${uf}`);
-        const data = await response.json();
+      router.get('/:idevento/previsao', async (req, res) => {
+        const eventoId = req.params.idevento;
+        // busca cidade e estado do do evento
+        const [cidadeUf] = await db.query('select evento_cidade, evento_uf from eventos where evento_id = ?', [eventoId]);  
+        if (cidadeUf.length === 0) {
+          return res.status(404).json({
+              mensagem: 'Evento não encontrado'
+          });
+        }
+        const cidade= cidadeUf[0].evento_cidade;
+        const uf = cidadeUf[0].evento_uf;        
         const filtered= {};
-        filtered.cidade = data.results.city.split(',')[0];
-        filtered.uf =data.results.city.split(',')[1];
-        filtered.temperatura = data.results.temp + '°C';
-        filtered.condicao = data.results.description;
-       // filtered.forecast = data.results.forecast;
-        filtered.min = data.results.forecast[0].min + '°C';
-        filtered.max = data.results.forecast[0].max + '°C';
-        filtered.cod_condicao = Number(data.results.condition_code);
-        filtered.probabilidade_chuva = data.results.forecast[0].rain_probability + '%';
-        filtered.icone = '';
+        //verificar se já tem previsao do tempo para cidade e uf no dia
+        const prevBanco = await db.query(' select * from eventos e ' +
+                                         ' join evento_previsao ep on e.evento_id = ep.evento_previsao_eventoid ' +
+                                         ' where e.evento_cidade  = ? ' +
+                                         ' and e.evento_uf=? '+
+                                         ' and evento_previsao_atualizacao = curdate()', [cidade, uf]);
+        // se tem registro no banco para o dia, utiliza ele
+        if (prevBanco[0].length > 0) {
+            filtered.cidade = prevBanco[0][0].evento_cidade;
+            filtered.uf = prevBanco[0][0].evento_uf;
+            filtered.temperatura = prevBanco[0][0].evento_previsao_temperatura + '°C';
+            filtered.condicao = prevBanco[0][0].evento_previsao_previsao;
+            filtered.cod_condicao = Number(prevBanco[0][0].evento_previsao_codimagem);
+            filtered.min = prevBanco[0][0].evento_previsao_temperatura + '°C';
+            filtered.max = prevBanco[0][0].evento_previsao_temperatura + '°C';
+            //filtered.probabilidade_chuva = prevBanco[0][0].evento_previsao_probabilidade_chuva + '%';
+            filtered.icone = '';  
+            filtered.idevento = prevBanco[0][0].evento_previsao_eventoid;          
+            filtered.origin = 'Banco de Dados';
+        } else {
+            // Se não tem registro no banco, consome API
+            const response = await fetch(`https://api.hgbrasil.com/weather?format=json-cors&key=6bd9592b&city_name=${cidade},${uf}`);
+            const data = await response.json();        
+            filtered.cidade = data.results.city.split(',')[0];
+            filtered.uf =data.results.city.split(',')[1];
+            filtered.temperatura = data.results.temp + '°C';
+            filtered.condicao = data.results.description;
+          // filtered.forecast = data.results.forecast;
+            filtered.min = data.results.forecast[0].min + '°C';
+            filtered.max = data.results.forecast[0].max + '°C';
+            filtered.cod_condicao = Number(data.results.condition_code);
+            //filtered.probabilidade_chuva = data.results.forecast[0].rain_probability + '%';
+            filtered.icone = '';  
+            filtered.idevento = eventoId;   
+            filtered.origin = 'API';    
+            // verifica se o evento existe no banco, se existir grava a previsão do tempo para o evento
+            const [eventoExiste] = await db.query('select * from eventos where evento_id = ?', [eventoId]);
+            if (eventoExiste.length > 0) {
+               const updatePrevisaoEvento = await db.query('UPDATE evento_previsao SET evento_previsao_previsao=?, evento_previsao_temperatura=?, evento_previsao_codimagem=?, evento_previsao_atualizacao=curdate() WHERE evento_previsao_eventoid=?', [filtered.condicao, Number(data.results.temp), filtered.cod_condicao, eventoId]);  
+            }else{
+               const gravaPrevisaoEvento = await db.query('INSERT INTO evento_previsao (evento_previsao_eventoid,evento_previsao_previsao,evento_previsao_temperatura,evento_previsao_codimagem,evento_previsao_atualizacao) VALUES (?,?,?,?, curdate())', [eventoId, filtered.condicao, Number(data.results.temp),filtered.cod_condicao]);
+            }
+        
+           // console.log('Gravou previsão do tempo no banco para evento -> ' + eventoId);
+          }
         // tratamendo para código de condição
        const tempestade = [0,1,2,3,4,37,38,39,47];
        const neve = [5,7,13,14,15,16,17,18,35,41,42,43,46];
@@ -466,78 +502,7 @@ router.post('/criar-evento', async (req, res) => {
 
       });
   // previsao do tempo atual
-         /**
- * @swagger
- * /eventos/{idevento}/previsao:
- *   put:
- *     summary: Atualiza a previsão do tempo para uma cidade e evento
- *     tags:
- *       - Eventos 
- *     parameters:
- *       - in: path
- *         name: idevento
- *         description: ID do evento
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Previsão do tempo o evento 
- *       404:
- *         description: Evento não encontrado
- */   
-      router.put('/:idevento/previsao', async (req, res) => {
-        try {
-          
-          const [existeEvento] = await db.query('select * from evento_previsao  where evento_previsao_eventoid = ?', [req.params.idevento]);
-          if (existeEvento.length === 0) {
-            return res.status(404).json({ error: 'Evento não encontrado' });
-          }
-          const dataHoje = new Date().toISOString().split('T')[0];
-          const dataAtual = existeEvento[0].evento_previsao_atualizacao.toISOString().split('T')[0];
-          if (dataAtual === dataHoje) {            
-            return res.status(400).json({ error: 'A previsão do tempo já foi atualizada hoje' });
-          }
-          const evento = await db.query('select * from eventos where evento_id = ?', [req.params.idevento]);
-          const cidade = evento[0][0].evento_cidade;
-          const uf = evento[0][0].evento_uf;  
-          const response = await fetch(`https://api.hgbrasil.com/weather?format=json-cors&key=6bd9592b&city_name=${cidade},${uf}`);
-          const data = await response.json();
-          const filtered= {};
-          filtered.cidade = data.results.city.split(',')[0];
-          filtered.uf =data.results.city.split(',')[1];
-          filtered.temperatura = data.results.temp;
-          filtered.condicao = data.results.description;
-          filtered.codimagem = data.results.img_id;
-         // filtered.forecast = data.results.forecast;
-          filtered.min = data.results.forecast[0].min + '°C';
-          filtered.max = data.results.forecast[0].max + '°C';
-          filtered.probabilidade_chuva = data.results.forecast[0].rain_probability + '%';
-          //console.log('Data atual do evento -> ' + dataAtual + 'Data de hoje -> ' + new Date().toDateString());
-         
-          const [result] = await db.query(
-            'UPDATE evento_previsao ' +
-            'SET evento_previsao_previsao = ?, ' +
-            'evento_previsao_temperatura = ?, ' +
-            'evento_previsao_codimagem = ?, ' +
-            'evento_previsao_atualizacao = ? ' +
-            ' WHERE evento_previsao_eventoid = ?',
-            [ filtered.condicao,Number(filtered.temperatura), filtered.codimagem, dataHoje, Number(req.params.idevento)]
-          );
-
-          if (result.affectedRows > 0) {
-            res.json({ message: 'Previsão do tempo atualizada com sucesso', previsao: filtered });
-          } else {
-            res.status(500).json({ error: 'Erro ao atualizar previsão do tempo' });
-          }
-        } catch (erro) {
-          console.error(erro);
-          res.status(500).json({
-            sucesso: false,
-            mensagem: 'Erro ao atualizar previsão do tempo.',
-            erro: erro.message
-          });
-        }
-      });
+ 
+      
        module.exports = router;
 
