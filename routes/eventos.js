@@ -421,8 +421,49 @@ router.post('/criar-evento', async (req, res) => {
        // filtered.forecast = data.results.forecast;
         filtered.min = data.results.forecast[0].min + '°C';
         filtered.max = data.results.forecast[0].max + '°C';
+        filtered.cod_condicao = Number(data.results.condition_code);
         filtered.probabilidade_chuva = data.results.forecast[0].rain_probability + '%';
-        res.json(filtered);
+        filtered.icone = '';
+        // tratamendo para código de condição
+       const tempestade = [0,1,2,3,4,37,38,39,47];
+       const neve = [5,7,13,14,15,16,17,18,35,41,42,43,46];
+       const chuva = [6,9,10,11,12,40,45];
+       const geada = [8,19,20,21,22];
+       const nublado = [23,24,25,26];
+       const noite_limpa = [27,31,33];
+       const sol_nuvem = [28,30,44];
+       const noite_nuvem = [29];
+       const dia_limpo = [32,36];
+
+       if(tempestade.includes(filtered.cod_condicao)){
+          filtered.icone = 'cloud-lightning-rain';
+       }
+       if(neve.includes(filtered.cod_condicao)){
+         filtered.icone = 'cloud-snow';
+       }
+       if(chuva.includes(filtered.cod_condicao)){
+         filtered.icone = 'cloud-rain';
+       }
+       if(geada.includes(filtered.cod_condicao)){
+         filtered.icone = 'cloud-fog';
+       }
+       if(nublado.includes(filtered.cod_condicao)){
+         filtered.icone = 'cloudy';
+       }
+       if(noite_limpa.includes(filtered.cod_condicao)){
+         filtered.icone = 'moon';
+       }
+       if(sol_nuvem.includes(filtered.cod_condicao)){
+         filtered.icone = 'cloud-sun';
+       }
+       if(noite_nuvem.includes(filtered.cod_condicao)){
+         filtered.icone = 'cloud-moon';
+       }
+       if(dia_limpo.includes(filtered.cod_condicao)){
+         filtered.icone = 'sun';
+       }         
+         res.json(filtered);
+
       });
   // previsao do tempo atual
          /**
