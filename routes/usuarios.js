@@ -366,6 +366,8 @@ router.get('/', async (req, res) => {
    * /usuarios/user/{username}:
    *   get:
    *     summary: Buscar usuário por nome de usuário
+   *     tags:
+   *       - Usuarios
    *     parameters:
    *       - name: username
    *         in: path
@@ -396,6 +398,39 @@ router.get('/', async (req, res) => {
       res.status(500).json({
         sucesso: false,
         mensagem: 'Erro ao buscar usuário.',
+        erro: erro.message
+      });
+    }
+  });
+  /**
+   * @swagger
+   * /usuarios/eventos/{usuario_id}/{evento_id}:
+   *   get:
+   *     summary: Buscar dados da participação do usuário no evento 
+   *     tags:
+   *       - Usuarios
+   *     parameters:
+   *       - name: usuario_id
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *       - name: evento_id
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   */
+  router.get('/eventos/:usuario_id/:evento_id', async (req, res) => {
+    try {
+      const { usuario_id, evento_id } = req.params;
+      const [meusEventos] = await db.query('select * from evento_x_usuario where evento_x_usuario_usuario_id = ? and evento_x_usuario_eventoid = ?' , [usuario_id, evento_id]);
+      res.status(200).json({meusEventos});
+    } catch (erro) {
+      console.error(erro);
+      res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro ao buscar eventos.',
         erro: erro.message
       });
     }
