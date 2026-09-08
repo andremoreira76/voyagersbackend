@@ -435,5 +435,81 @@ router.get('/', async (req, res) => {
       });
     }
   });
+  /**
+   * @swagger
+   * /usuarios/participar/{usuario_id}/{evento_id}/{status}:
+   *   put:
+   *     summary: Atualizar participação do usuário no evento
+   *     tags:
+   *       - Usuarios
+   *     parameters:
+   *       - name: usuario_id
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *       - name: evento_id
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *       - name: status
+   *         in: path
+   *         required: true
+   *         description: Status de participação (true para confirmado, false para não confirmado)
+   *         schema:
+   *           type: string
+   */
+  router.put('/participar/:usuario_id/:evento_id/:status', async (req, res) => {
+    try {
+      const { usuario_id, evento_id } = req.params;
+      // verificar se já existe registro do evento para o usuario na tabela
+      const [existe] = await db.query('select * from evento_x_usuario where evento_x_usuario_usuario_id = ? and evento_x_usuario_eventoid = ?' , [req.params.usuario_id, req.params.evento_id]);
+      if (existe.length === 0) {
+           try {
+            const adiciona = await db.query('insert into evento_x_usuario (evento_x_usuario_usuario_id, evento_x_usuario_eventoid, evento_x_usuario_confirmado) values (?, ?, ?)' , [req.params.usuario_id, req.params.evento_id, 0]);            
+            } catch (erro) {
+              console.error(erro);
+              res.status(500).json({
+                sucesso: false,
+                mensagem: 'Erro ao adicionar participação do usuário no evento.' + req.params.usuario_id + ' - ' + req.params.evento_id,
+                erro: erro.message
+              });
+            }
+      };  
+      
+      let confirmado = 0;
+      // verificar status atual da participação do usuario no evento
+      const part = await db.query('select evento_x_usuario_confirmado from evento_x_usuario where evento_x_usuario_usuario_id = ? and evento_x_usuario_eventoid = ?' , [usuario_id, evento_id]); 
+      const participacao = part[0][0].evento_x_usuario_confirmado;
+      if(participacao === 1 && req.params.status === 'true'){
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'Usuário já está confirmado no evento.'
+        });
+      }
+      if(participacao === 0 && req.params.status === 'false'){
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'Usuário não está confirmado no evento.'
+        });
+      }
+      if (req.params.status === 'true') {
+        confirmado = 1;
+      }else{
+        confirmado = 0;
+           }
+     const [atualiza]  = await db.query('update evento_x_usuario set evento_x_usuario_confirmado = ? where evento_x_usuario_usuario_id = ? and evento_x_usuario_eventoid = ?' , [confirmado, usuario_id, evento_id]);
+      res.status(200).json({atualiza});
+    } catch (erro) {
+      console.error(erro);
+      res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro ao buscar eventos.',
+        erro: erro.message
+      });
+    }
+  });
+
 
   module.exports = router;
