@@ -501,8 +501,60 @@ router.post('/criar-evento', async (req, res) => {
          res.json(filtered);
 
       });
-  // previsao do tempo atual
- 
-      
-       module.exports = router;
+      /**
+       * @swagger
+       * /eventos/{idevento}/vagaseinscritos:
+       *   get:
+       *     summary: Retorna a quantidade de vagas e inscritos do evento
+        *     tags:
+        *       - Eventos
+        *     parameters:
+        *       - in: path
+        *         name: idevento
+        *         description: ID do evento
+        *         required: true
+        *         schema:
+        *           type: integer
+        *     responses:
+        *       200:
+        *         description: Quantidade de vagas e inscritos do evento
+        *       404:
+        *         description: Evento não encontrado
+        *       500:
+        *         description: Erro interno do servidor
+       */
+      router.get('/:idevento/vagaseinscritos', async (req, res) => {
+        try {
+          const [vagasEInscritos] = await db.query("SELECT SUM(vagas) AS vagas, " + 
+                                                   " SUM(inscritos) AS inscritos " +
+                                                   " FROM ( " + 
+                                                   " SELECT " +
+                                                   " 0 AS vagas," +
+                                                   "  COUNT(*) AS inscritos " +
+                                                   " FROM evento_x_usuario " +
+                                                   " WHERE evento_x_usuario_eventoid = ? " +
+                                                   " UNION ALL " +
+                                                   " SELECT " +
+                                                   " evento_vagas AS vagas, " +
+                                                   " 0 AS inscritos " +
+                                                   " FROM eventos " +
+                                                   " WHERE evento_id = ? " +
+                                                    " ) AS subquery", [req.params.idevento, req.params.idevento]);
+          if (vagasEInscritos.length === 0) {
+            return res.status(404).json({
+              mensagem: 'Evento não encontrado'
+            });
+          }
+          res.json(vagasEInscritos[0]);
+        } catch (erro) {
+          console.error(erro);
+          res.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro ao buscar vagas e inscritos do evento.',  
+          })
+        };
+     });
+
+     module.exports = router;
+          
 
