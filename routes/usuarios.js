@@ -510,6 +510,67 @@ router.get('/', async (req, res) => {
       });
     }
   });
+  /**
+   * @swagger
+   * /usuarios/retorna-perfis/{usuario_id}:
+   *   get:
+  *     summary: Retorna os perfis do usuário
+  *     tags:
+  *       - Usuarios
+  *     parameters:
+  *       - name: usuario_id
+  *         in: path
+  *         required: true
+  *         schema:
+  *           type: string
+   */
 
+  router.get('/retorna-perfis/:usuario_id', async (req, res) => {
+    try {
+      const { usuario_id } = req.params;
+      const [perfis] = await db.query('select p.* from perfil p ' +
+                                      ' join perfil_x_usuario pxu on p.perfil_id =pxu.perfil_x_usuario_perfilid ' +
+                                      ' where pxu.perfil_x_usuario_usuarioid = ?', [usuario_id]); 
 
+      res.status(200).json({perfis});
+    } catch (erro) {
+      console.error(erro);
+      res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro ao buscar perfis.',
+        erro: erro.message
+      });
+    }
+  });
+  /**
+   * @swagger
+   * /usuarios/retorna-dados-pix/{eventos_responsavelid}:
+   *   get:
+   *     summary: Retorna os dados do PIX do responsável pelo evento
+   *     tags:
+   *       - Usuarios
+   *     parameters:
+   *       - name: eventos_responsavelid
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   */
+  router.get('/retorna-dados-pix/:eventos_responsavelid', async (req, res) => {
+    try {
+      const { eventos_responsavelid } = req.params;
+      const [dadosPix] = await db.query('select u.usuario_tipochavepix ,u.usuario_chavepix ' +
+                                        ' from usuarios u ' + 
+                                        ' join eventos e  on u.usuario_id  = e.evento_responsavelid ' +
+                                        ' where e.evento_responsavelid = ?', [eventos_responsavelid]);
+      res.status(200).json({dadosPix});
+    } catch (erro) {
+      console.error(erro);
+      res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro ao buscar dados do PIX.',
+        erro: erro.message
+      });
+    }
+  });
   module.exports = router;

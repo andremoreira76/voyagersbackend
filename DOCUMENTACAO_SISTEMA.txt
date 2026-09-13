@@ -1,0 +1,551 @@
+# Traveling Around API
+
+Documentação técnica do sistema até o momento.
+
+> Documento gerado a partir do código atual do backend. Os contratos podem evoluir conforme novas regras de negócio forem implementadas.
+
+## 1. Visão geral
+
+Backend HTTP construído com Node.js e Express para o sistema Traveling Around. A API disponibiliza funcionalidades de:
+
+- autenticação de usuários;
+- cadastro e consulta de usuários;
+- cadastro e consulta de eventos;
+- participação de usuários em eventos;
+- consulta de perfis de usuários;
+- pontos de apoio;
+- cálculo de distância entre coordenadas;
+- consulta de estados brasileiros;
+- previsão do tempo de eventos;
+- documentação interativa via Swagger UI.
+
+## 2. Execução
+
+### Requisitos
+
+- Node.js com suporte a `fetch` global, recomendado Node.js 18 ou superior;
+- MySQL;
+- dependências instaladas com `npm install`;
+- arquivo `.env` configurado.
+
+### Instalação
+
+```bash
+cd voyagersbackend
+npm install
+```
+
+### Inicialização
+
+```bash
+node server.js
+```
+
+O servidor é iniciado na porta `3000`:
+
+- API: `http://localhost:3000`
+- Swagger UI: `http://localhost:3000/api-docs`
+
+O `package.json` contém as dependências, mas atualmente não define scripts de execução.
+
+## 3. Variáveis de ambiente
+
+O arquivo `database.js` utiliza as seguintes variáveis:
+
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=usuario_do_banco
+DB_PASSWORD=senha_do_banco
+DB_DATABASE=nome_do_banco
+JWT_SECRET=chave_secreta
+JWT_EXPIRES=1d
+```
+
+`JWT_SECRET` e `JWT_EXPIRES` são usados na geração do token de login.
+
+## 4. Configuração HTTP
+
+### Formatos aceitos
+
+- `application/json`, via `express.json()`;
+- formulários URL encoded, via `express.urlencoded({ extended: true })`.
+
+### CORS
+
+São permitidas requisições sem `Origin` e as seguintes origens:
+
+- `http://localhost`;
+- `http://127.0.0.1`;
+- `http://vps68790.publiccloud.com.br`;
+- `https://vps68790.publiccloud.com.br`.
+
+Métodos liberados: `GET`, `POST`, `PUT`, `DELETE` e `OPTIONS`.
+
+Headers liberados: `Content-Type` e `Authorization`.
+
+## 5. Autenticação
+
+A autenticação é feita pelo endpoint `POST /login`. O sistema verifica o usuário no banco, compara a senha com `bcrypt` e retorna um JWT.
+
+Embora o header `Authorization` esteja liberado no CORS, atualmente não há middleware de validação de JWT aplicado às rotas documentadas.
+
+### POST /login
+
+Realiza o login do usuário.
+
+#### Corpo
+
+```json
+{
+  "usuario": "andre",
+  "senha": "123456"
+}
+```
+
+#### Resposta 200
+
+```json
+{
+  "sucesso": true,
+  "token": "jwt-gerado",
+  "usuario": {
+    "id": 1,
+    "nome": "André Moreira",
+    "email": "andre@email.com"
+  }
+}
+```
+
+#### Possíveis erros
+
+- `400`: usuário e senha não informados;
+- `401`: usuário ou senha inválidos;
+- `500`: erro interno.
+
+## 6. Endpoints de usuários
+
+Prefixo: `/usuarios`
+
+### GET /usuarios
+
+Lista todos os usuários da tabela `usuarios`.
+
+Resposta de sucesso: `200`.
+
+Formato atual:
+
+```json
+{
+  "usuarios": []
+}
+```
+
+Em caso de falha de banco, retorna `500` com `sucesso`, `mensagem` e `erro`.
+
+### POST /usuarios/novo-usuario
+
+Cadastra um usuário, gera o hash da senha com `bcrypt` e associa automaticamente o perfil padrão de ID `3`.
+
+#### Corpo
+
+Campos utilizados:
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| `usuario_nome` | string | Nome do usuário |
+| `usuario_usuario` | string | Nome de login |
+| `usuario_senha` | string | Senha em texto; é armazenada com hash |
+| `usuario_email` | string | E-mail |
+| `usuario_nascimento` | string/date | Data de nascimento |
+| `usuario_cidade` | string | Cidade |
+| `usuario_uf` | string | Estado |
+| `usuario_status` | string | Status do usuário |
+| `usuario_empresaid` | integer | Empresa, quando aplicável |
+| `usuario_filialid` | integer | Filial, quando aplicável |
+| `usuario_cep` | string | CEP |
+| `usuario_lat` | string | Latitude inicial |
+| `usuario_long` | string | Longitude inicial |
+
+Os quatro campos validados explicitamente são `usuario_nome`, `usuario_usuario`, `usuario_senha` e `usuario_email`.
+
+#### Respostas
+
+- `201`: usuário cadastrado;
+- `400`: campos básicos ausentes;
+- `409`: já existe usuário com mesmo nome, e-mail ou login;
+- `500`: erro interno.
+
+Resposta `201`:
+
+```json
+{
+  "sucesso": true,
+  "mensagem": "Usuário cadastrado com sucesso.",
+  "usuario_id": 15
+}
+```
+
+### POST /usuarios/reset-password
+
+Redefine a senha pelo e-mail informado.
+
+#### Corpo
+
+```json
+{
+  "usuario_email": "andre@email.com",
+  "usuario_nova_senha": "novaSenha123"
+}
+```
+
+Respostas:
+
+- `200`: senha resetada;
+- `400`: e-mail ausente;
+- `404`: usuário não encontrado;
+- `500`: erro interno.
+
+### POST /usuarios/update-location
+
+Atualiza a localização de um usuário.
+
+#### Corpo
+
+```json
+{
+  "usuario_id": 1,
+  "latitude": -23.55052,
+  "longitude": -46.633303
+}
+```
+
+Respostas:
+
+- `200`: localização atualizada;
+- `400`: dados inválidos ou ausentes;
+- `404`: usuário não encontrado;
+- `500`: erro interno.
+
+> O código atual atualiza as colunas `usuario_latitude` e `usuario_longitude`, enquanto o cadastro utiliza `usuario_lat` e `usuario_long`. Verificar se essa diferença corresponde ao esquema real do banco.
+
+### GET /usuarios/user/{username}
+
+Busca um usuário pelo nome de login.
+
+Parâmetro de rota:
+
+- `username`: nome do usuário.
+
+Respostas:
+
+- `200`: usuário encontrado em `dados`;
+- `404`: usuário não encontrado;
+- `500`: erro interno.
+
+### GET /usuarios/eventos/{usuario_id}/{evento_id}
+
+Consulta o registro de participação de um usuário em um evento.
+
+Parâmetros:
+
+- `usuario_id`: ID do usuário;
+- `evento_id`: ID do evento.
+
+Resposta `200`:
+
+```json
+{
+  "meusEventos": []
+}
+```
+
+### PUT /usuarios/participar/{usuario_id}/{evento_id}/{status}
+
+Cria ou atualiza a participação do usuário no evento.
+
+Parâmetros:
+
+- `usuario_id`: ID do usuário;
+- `evento_id`: ID do evento;
+- `status`: `true` para confirmar ou `false` para desconfirmar.
+
+Comportamento:
+
+- se não existir participação, cria um registro inicial;
+- atualiza `evento_x_usuario_confirmado` para `1` ou `0`;
+- rejeita a operação quando o estado solicitado já é o estado atual.
+
+Respostas:
+
+- `200`: participação atualizada;
+- `400`: usuário já confirmado ou não confirmado, conforme o caso;
+- `500`: erro interno.
+
+### GET /usuarios/retorna-perfis/{usuario_id}
+
+Retorna os perfis associados ao usuário, usando as tabelas `perfil` e `perfil_x_usuario`.
+
+Parâmetro:
+
+- `usuario_id`: ID do usuário.
+
+Resposta `200`:
+
+```json
+{
+  "perfis": []
+}
+```
+
+Em caso de falha, retorna `500`.
+
+## 7. Endpoints de eventos
+
+Prefixo: `/eventos`
+
+### GET /eventos
+
+Lista todos os eventos.
+
+Resposta `200`:
+
+```json
+{
+  "eventos": []
+}
+```
+
+### POST /eventos/criar-evento
+
+Cadastra um evento.
+
+#### Campos do corpo
+
+| Grupo | Campos |
+|---|---|
+| Obrigatórios | `evento_nome`, `evento_datainicio`, `evento_datafim` |
+| Identificação | `evento_nome`, `evento_descricao`, `evento_tipoevento`, `evento_status` |
+| Organização | `evento_empresaid`, `evento_filialid`, `evento_responsavel`, `evento_responsavelid`, `evento_foneresponsavel` |
+| Datas e horários | `evento_datainicio`, `evento_datafim`, `evento_datalimiteinscricao`, `evento_horainicialacesso`, `evento_horafinalacesso`, `evento_horainicialsaida`, `evento_horafinalsaida`, `evento_horasilencioinicial`, `evento_horasilenciofinal` |
+| Valores e capacidade | `evento_valor`, `evento_valorcrianca`, `evento_vagas`, `evento_idadecrianca` |
+| Regras | `evento_podebarraca`, `evento_podepet`, `evento_podesomalto`, `evento_tipopagamento`, `evento_tipocobranca` |
+| Localização | `evento_local`, `evento_endereco`, `evento_cidade`, `evento_uf`, `evento_latitude`, `evento_longitude` |
+| Mídia | `evento_logotipo` |
+
+Os valores padrão definidos no código são:
+
+- `evento_empresaid`: `1`;
+- `evento_filialid`: `1`;
+- `evento_status`: `ATIVO`.
+
+Respostas:
+
+- `201`: evento criado e retorna `evento_id`;
+- `400`: nome, data inicial ou data final ausente;
+- `500`: erro interno.
+
+### GET /eventos/ativos
+
+Lista eventos com status `ATIVO`, cuja data final é maior ou igual à data atual, ordenados pela data inicial.
+
+Respostas:
+
+- `200`: lista de eventos;
+- `404`: nenhum evento encontrado;
+- `500`: erro interno.
+
+### GET /eventos/{id}
+
+Retorna um evento pelo ID.
+
+Respostas:
+
+- `200`: objeto do evento;
+- `404`: evento não encontrado;
+- `500`: erro interno.
+
+### GET /eventos/{idevento}/quantidade-participantes
+
+Retorna a quantidade de participantes associados ao evento.
+
+Resposta de sucesso, exemplo:
+
+```json
+{
+  "quantidade": 10
+}
+```
+
+Respostas: `200`, `404` ou `500`.
+
+### GET /eventos/{idevento}/participantes
+
+Retorna os usuários participantes do evento, combinando dados de usuários, participações e evento.
+
+Respostas: `200`, `404` ou `500`.
+
+### GET /eventos/{idevento}/previsao
+
+Retorna a previsão do tempo relacionada ao evento.
+
+Funcionamento:
+
+1. busca cidade e UF do evento;
+2. tenta usar uma previsão do dia armazenada no banco;
+3. quando não existe previsão atual, consulta a API externa HG Brasil Weather;
+4. grava ou atualiza a previsão no banco;
+5. traduz o código meteorológico para um nome de ícone.
+
+Resposta de sucesso contém, quando disponível:
+
+```json
+{
+  "cidade": "São Paulo",
+  "uf": "SP",
+  "temperatura": "25°C",
+  "condicao": "...",
+  "cod_condicao": 32,
+  "min": "20°C",
+  "max": "28°C",
+  "icone": "sun",
+  "idevento": 1,
+  "origin": "API"
+}
+```
+
+`origin` pode ser `API` ou `Banco de Dados`.
+
+Respostas conhecidas:
+
+- `200`: previsão encontrada;
+- `404`: evento não encontrado;
+- erros de banco ou da API externa podem resultar em erro não tratado específico da operação.
+
+> A implementação contém uma chave da API externa diretamente no código. Recomenda-se movê-la para uma variável de ambiente.
+
+### GET /eventos/{idevento}/vagaseinscritos
+
+Retorna a soma de vagas e o total de inscritos do evento.
+
+Resposta esperada:
+
+```json
+{
+  "vagas": 100,
+  "inscritos": 25
+}
+```
+
+Respostas: `200`, `404` ou `500`.
+
+## 8. Endpoints de pontos de apoio
+
+Prefixo: `/apoio`
+
+### GET /apoio
+
+Lista todos os pontos de apoio da tabela `apoio`.
+
+Resposta `200`:
+
+```json
+{
+  "apoio": []
+}
+```
+
+Em caso de falha de banco, retorna `500`.
+
+## 9. Endpoints utilitários
+
+Prefixo: `/uteis`
+
+### GET /uteis/distancia/{lat1}/{lon1}/{lat2}/{lon2}
+
+Calcula a distância entre dois pontos usando a fórmula de Haversine.
+
+Parâmetros:
+
+- `lat1`: latitude do primeiro ponto;
+- `lon1`: longitude do primeiro ponto;
+- `lat2`: latitude do segundo ponto;
+- `lon2`: longitude do segundo ponto.
+
+Resposta `200`:
+
+```json
+{
+  "sucesso": true,
+  "distancia": 12.34,
+  "unidade": "km"
+}
+```
+
+Respostas:
+
+- `400`: latitude ou longitude inválida;
+- `500`: erro interno.
+
+## 10. Endpoints gerais
+
+### GET /
+
+Retorna o texto:
+
+```text
+Hello, World!
+```
+
+### GET /estados/
+
+Retorna a lista fixa dos estados brasileiros com UF e nome.
+
+Exemplo:
+
+```json
+[
+  {
+    "uf": "RS",
+    "nome": "Rio Grande do Sul"
+  }
+]
+```
+
+## 11. Documentação Swagger
+
+A documentação interativa é disponibilizada em:
+
+```text
+http://localhost:3000/api-docs
+```
+
+A especificação utiliza OpenAPI `3.0.0`, com título `Traveling Around API` e versão `1.0.0`.
+
+Os schemas principais definidos são:
+
+- `Evento`;
+- `EventoInput`.
+
+## 12. Banco de dados utilizado
+
+Pelas consultas presentes no código, o sistema depende, entre outras, das seguintes tabelas:
+
+- `usuarios`;
+- `eventos`;
+- `apoio`;
+- `perfil`;
+- `perfil_x_usuario`;
+- `evento_x_usuario`;
+- `evento_previsao`.
+
+## 13. Pontos de atenção atuais
+
+- Não há scripts `start` ou `dev` no `package.json`.
+- Não há middleware de autenticação JWT aplicado às rotas.
+- As credenciais do banco dependem do `.env`; o arquivo não deve ser versionado com segredos reais.
+- A chave da API de previsão do tempo está no código e deve ser externalizada.
+- A rota de atualização de localização usa nomes de colunas diferentes dos usados no cadastro.
+- Algumas respostas não possuem schemas detalhados no Swagger.
+- A rota de previsão do tempo depende de serviço externo e de conectividade de rede.
+- O backend não apresenta, até o momento, uma suíte de testes automatizados configurada.
