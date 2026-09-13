@@ -559,10 +559,10 @@ router.get('/', async (req, res) => {
   router.get('/retorna-dados-pix/:eventos_responsavelid', async (req, res) => {
     try {
       const { eventos_responsavelid } = req.params;
-      const [dadosPix] = await db.query('select u.usuario_tipochavepix ,u.usuario_chavepix ' +
+      const [dadosPix] = await db.query('select u.usuario_nome,u.usuario_tipochavepix ,u.usuario_chavepix ' +
                                         ' from usuarios u ' + 
                                         ' join eventos e  on u.usuario_id  = e.evento_responsavelid ' +
-                                        ' where e.evento_responsavelid = ?', [eventos_responsavelid]);
+                                        ' where e.evento_responsavelid = ?  limit 1', [eventos_responsavelid]);
       res.status(200).json({dadosPix});
     } catch (erro) {
       console.error(erro);
