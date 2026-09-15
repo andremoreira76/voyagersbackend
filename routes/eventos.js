@@ -554,7 +554,47 @@ router.post('/criar-evento', async (req, res) => {
           })
         };
      });
+     /**
+      * @swagger
+       * /comprovante/{idevento}/{idusuario}/{comprovante}:
+       *   put:
+       *     summary: Adiciona comprovante de pagamento para o usuario no evento
+        *     tags:
+        *       - Eventos
+        *     parameters:
+        *       - in: path
+        *         name: idevento
+        *         description: ID do evento
+        *         required: true
+        *         schema:
+        *           type: integer
+      */
+     router.put('/comprovante/:idevento/:idusuario/:comprovante', async (req,res)=>{
+         const idevento = req.params.idevento;
+         const idusuario = req.params.idusuario;
+         const comprovante = req.params.comprovante;
+         
+         try{
+         const comprovantepgto = db.query('update evento_x_usuario' + 
+                                          ' set evento_x_usuario_comprovante = ? ' +
+                                          ' where evento_x_usuario_eventoid = ? ' +
+                                          ' and evento_x_usuario_usuario_id = ?', [comprovante,idevento,idusuario]);
+              
+            if (comprovantepgto.affectedRows === 0 ){
+                res.status(404).json({sucesso:false, mensagem: 'Evento ou usuario não localizado'});            
+            }else{
+                res.json({sucesso:true, mensagem:'Comprovante inserido com sucesso'});
+            }   
+         
+         }catch(erro){
+            console.error(erro);
+          res.status(500).json({
+            sucesso: false,
+            mensagem: 'Erro atualizar comprovante.',  
+          })
+         }
 
+     }) 
      module.exports = router;
           
 
