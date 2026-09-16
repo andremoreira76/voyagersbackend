@@ -584,7 +584,7 @@ router.post('/criar-evento', async (req, res) => {
                 res.status(404).json({sucesso:false, mensagem: 'Evento ou usuario não localizado'});            
             }else{
                 res.json({sucesso:true, mensagem:'Comprovante inserido com sucesso'});
-            }   
+            }    
          
          }catch(erro){
             console.error(erro);
