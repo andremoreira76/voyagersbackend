@@ -576,7 +576,8 @@ router.post('/criar-evento', async (req, res) => {
          
          try{
          const comprovantepgto = db.query('update evento_x_usuario' + 
-                                          ' set evento_x_usuario_comprovante = ? ' +
+                                          ' set evento_x_usuario_comprovante = ? ,' +
+                                          ' evento_x_usuario_pago = 2 ' + 
                                           ' where evento_x_usuario_eventoid = ? ' +
                                           ' and evento_x_usuario_usuario_id = ?', [comprovante,idevento,idusuario]);
               
