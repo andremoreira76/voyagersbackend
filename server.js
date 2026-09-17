@@ -44,6 +44,7 @@ app.use('/eventos', eventosRoutes);
 app.use('/', authRoutes);
 app.use('/apoio', apoioRoutes);
 app.use('/uteis', require('./routes/uteis'));
+app.use('/eventosorganizador', require('./routes/eventosorganizador'));
 
 app.get('/', (req, res) => {
   res.send('Hello, World!');
