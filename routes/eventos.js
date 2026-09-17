@@ -234,7 +234,7 @@ router.post('/criar-evento', async (req, res) => {
  */
       router.get('/ativos', async (req, res) => {
       try {
-        const [eventos] = await db.query("select * from eventos where evento_status='ATIVO' and evento_datafim <= curdate() order by evento_datainicio asc" );
+        const [eventos] = await db.query("select * from eventos where evento_status='ATIVO' and evento_datafim >= curdate() order by evento_datainicio asc" );
         if (eventos.length === 0) {
           return res.status(404).json({
               mensagem: 'Evento não encontrado'
