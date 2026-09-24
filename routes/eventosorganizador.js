@@ -82,7 +82,7 @@ router.get('/listarEventosOrganizador/:organizadorId', async (req, res) => {
  */
 router.get('/listarParticipantesEvento/:eventoId', async (req, res) => {
     const eventoId = req.params.eventoId;
-    const [participantes] = await db.query('select usuario_id,usuario_nome,eu.evento_x_usuario_pago ' +
+    const [participantes] = await db.query('select usuario_id,usuario_nome,eu.evento_x_usuario_pago,evento_x_usuario_comprovante ' +
                                            ' from usuarios u ' +
                                            ' join evento_x_usuario eu on eu.evento_x_usuario_usuario_id = u.usuario_id ' +
                                            ' where eu.evento_x_usuario_eventoid = ?' + 
