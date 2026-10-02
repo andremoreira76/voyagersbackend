@@ -136,7 +136,7 @@ router.post('/cadastrarRegra', async (req,res) =>{
 router.get('/listarRegrasEvento/:eventoId', async (req, res) => {
      const eventoId = req.params.eventoId;
      try{
-     const [regras] = await db.query('SELECT * FROM regras WHERE regras_eventoid = ?', [parseInt(eventoId, 10)]);
+     const [regras] = await db.query('SELECT * FROM regras WHERE regras_eventoid = ? order by regras_tipo', [parseInt(eventoId, 10)]);
      if (regras.length > 0) {
         res.status(200).json(regras);
      } else {
