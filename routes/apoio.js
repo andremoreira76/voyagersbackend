@@ -256,4 +256,17 @@ router.post('/cadastrarApoio', async (req, res) => {
     }
   }
 });
-      module.exports = router;
+router.get('/listaFotosApoio/:apoioId', async (req, res) => {
+  const { apoioId } = req.params;
+  try {
+    const [fotos] = await db.query('SELECT * FROM fotos_x_apoio WHERE fotos_x_apoio_apoioid = ?', [apoioId]);
+    if (fotos.length === 0) {
+      return res.status(404).json({ message: 'Nenhuma foto encontrada para este ponto de apoio' });
+    }
+    return res.status(200).json(fotos);
+  } catch (erro) {
+    console.error(erro);
+    res.status(500).json({ message: 'Erro ao listar fotos do ponto de apoio: ' + erro.message });
+  }
+});
+module.exports = router;
