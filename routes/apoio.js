@@ -256,6 +256,64 @@ router.post('/cadastrarApoio', async (req, res) => {
     }
   }
 });
+/**
+ * @swagger
+ * /apoio/listaFotosApoio/{apoioId}:
+ *   get:
+ *     summary: Lista as fotos de um ponto de apoio
+ *     tags:
+ *       - Pontos de Apoio
+ *     parameters:
+ *       - name: apoioId
+ *         in: path
+ *         required: true
+ *         description: Identificador do ponto de apoio
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Fotos encontradas para o ponto de apoio
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   fotos_x_apoio_id:
+ *                     type: integer
+ *                     example: 10
+ *                   fotos_x_apoio_apoioid:
+ *                     type: integer
+ *                     example: 1
+ *                   fotos_x_apoio_fotominiatura:
+ *                     type: string
+ *                     example: miniatura.jpg
+ *                   fotos_x_apoio_foto:
+ *                     type: string
+ *                     example: foto.jpg
+ *       404:
+ *         description: Nenhuma foto encontrada para este ponto de apoio
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Nenhuma foto encontrada para este ponto de apoio
+ *       500:
+ *         description: Erro ao listar as fotos do ponto de apoio
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Erro ao listar fotos do ponto de apoio
+ */
 router.get('/listaFotosApoio/:apoioId', async (req, res) => {
   const { apoioId } = req.params;
   try {
