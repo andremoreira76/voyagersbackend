@@ -116,6 +116,15 @@ router.get('/', async (req, res) => {
  *                 example:
  *                   - foto1.jpg
  *                   - foto2.jpg
+ *               foto_x_apoio_datafoto:
+ *                 type: array
+ *                 description: Data e hora de cada foto, na mesma ordem dos arrays de miniaturas e fotos. Se omitido, será usada a data e hora do cadastro.
+ *                 items:
+ *                   type: string
+ *                   format: date-time
+ *                 example:
+ *                   - "2026-10-03T13:00:00.000Z"
+ *                   - "2026-10-03T13:01:00.000Z"
  *     responses:
  *       200:
  *         description: Ponto de apoio cadastrado com sucesso
@@ -128,7 +137,7 @@ router.get('/', async (req, res) => {
  *                   type: string
  *                   example: Ponto de apoio cadastrado com sucesso!
  *       400:
- *         description: Quantidade de miniaturas diferente da quantidade de fotos
+ *         description: Quantidade de miniaturas diferente da quantidade de fotos ou de datas informadas
  *         content:
  *           application/json:
  *             schema:
@@ -136,7 +145,7 @@ router.get('/', async (req, res) => {
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Envie uma miniatura e uma foto para cada imagem.
+ *                   example: Envie uma miniatura e uma foto para cada imagem; se informar as datas, envie uma para cada foto.
  *       500:
  *         description: Erro ao cadastrar o ponto de apoio
  *         content:
@@ -171,7 +180,8 @@ router.post('/cadastrarApoio', async (req, res) => {
     apoio_banheiro,
     apoio_chuveiro,
     fotos_x_apoio_fotomiatura,
-    fotos_x_apoio_foto
+    fotos_x_apoio_foto,
+    foto_x_apoio_datafoto
   } = req.body;
 
   const miniaturas = fotos_x_apoio_fotomiatura === undefined
@@ -184,10 +194,15 @@ router.post('/cadastrarApoio', async (req, res) => {
     : Array.isArray(fotos_x_apoio_foto)
       ? fotos_x_apoio_foto
       : [fotos_x_apoio_foto];
+  const datasFotos = foto_x_apoio_datafoto === undefined
+    ? fotos.map(() => new Date())
+    : Array.isArray(foto_x_apoio_datafoto)
+      ? foto_x_apoio_datafoto
+      : [foto_x_apoio_datafoto];
 
-  if (miniaturas.length !== fotos.length) {
+  if (miniaturas.length !== fotos.length || datasFotos.length !== fotos.length) {
     return res.status(400).json({
-      message: 'Envie uma miniatura e uma foto para cada imagem.'
+      message: 'Envie uma miniatura e uma foto para cada imagem; se informar as datas, envie uma para cada foto.'
     });
   }
 
@@ -225,15 +240,16 @@ router.post('/cadastrarApoio', async (req, res) => {
     );
 
     if (fotos.length > 0) {
-      const placeholders = fotos.map(() => '(?, ?, ?)').join(', ');
+      const placeholders = fotos.map(() => '(?, ?, ?, ?)').join(', ');
       const valoresFotos = fotos.flatMap((foto, indice) => [
         insertResult.insertId,
         miniaturas[indice],
-        foto
+        foto,
+        datasFotos[indice]
       ]);
 
       await connection.query(
-        `INSERT INTO fotos_x_apoio (fotos_x_apoio_apoioid, fotos_x_apoio_fotominiatura, fotos_x_apoio_foto) VALUES ${placeholders}`,
+        `INSERT INTO fotos_x_apoio (fotos_x_apoio_apoioid, fotos_x_apoio_fotominiatura, fotos_x_apoio_foto, foto_x_apoio_datafoto) VALUES ${placeholders}`,
         valoresFotos
       );
     }
@@ -293,6 +309,10 @@ router.post('/cadastrarApoio', async (req, res) => {
  *                   fotos_x_apoio_foto:
  *                     type: string
  *                     example: foto.jpg
+ *                   foto_x_apoio_datafoto:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2026-10-03T13:00:00.000Z"
  *       404:
  *         description: Nenhuma foto encontrada para este ponto de apoio
  *         content:
@@ -317,7 +337,10 @@ router.post('/cadastrarApoio', async (req, res) => {
 router.get('/listaFotosApoio/:apoioId', async (req, res) => {
   const { apoioId } = req.params;
   try {
-    const [fotos] = await db.query('SELECT * FROM fotos_x_apoio WHERE fotos_x_apoio_apoioid = ?', [apoioId]);
+    const [fotos] = await db.query(
+      'SELECT fotos_x_apoio_id, fotos_x_apoio_apoioid, fotos_x_apoio_fotominiatura, fotos_x_apoio_foto, foto_x_apoio_datafoto FROM fotos_x_apoio WHERE fotos_x_apoio_apoioid = ?',
+      [apoioId]
+    );
     if (fotos.length === 0) {
       return res.status(404).json({ message: 'Nenhuma foto encontrada para este ponto de apoio' });
     }
