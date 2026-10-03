@@ -15,8 +15,8 @@ const db = require('../database.js');
  */
 router.get('/', async (req, res) => {
       try {
-        const apoio = await db.query('select * from apoio');
-        res.status(200).json({apoio});
+        const [apoio] = await db.query('select * from apoio');
+        res.status(200).json(apoio);
       } catch (erro) {
         console.error(erro);
         res.status(500).json({
