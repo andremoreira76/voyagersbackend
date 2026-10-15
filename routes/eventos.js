@@ -26,7 +26,9 @@ const db = require('../database.js');
  */
 router.get('/', async (req, res) => {
       try {
-        const [eventos] = await db.query('select * from eventos');
+        const [eventos] = await db.query('select *  from eventos ' +
+                                         ' where evento_status =\'ATIVO\' ' +
+                                         ' and evento_datafim <=now()');
         res.status(200).json({ eventos });
       } catch (erro) {
         console.error(erro);

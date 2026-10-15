@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database.js');
 // get usuarios
 /**
  * @swagger
@@ -86,5 +85,4 @@ router.get('/distancia/:lat1/:lon1/:lat2/:lon2/', async (req, res) => {
 
     }
       });
-
 module.exports = router;
