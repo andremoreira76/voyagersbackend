@@ -8,7 +8,7 @@ const db = require('../database.js');
  * @swagger
  * /eventos:
  *   get:
- *     summary: Lista todos os eventos
+ *     summary: Lista eventos ativos que ainda não terminaram
  *     tags:
  *       - Eventos
  *     responses:
@@ -26,9 +26,10 @@ const db = require('../database.js');
  */
 router.get('/', async (req, res) => {
       try {
-        const [eventos] = await db.query('select *  from eventos ' +
-                                         ' where evento_status =\'ATIVO\' ' +
-                                         ' and evento_datafim <=now()');
+        const [eventos] = await db.query("select * from eventos " +
+                                         "where evento_status = 'ATIVO' " +
+                                         "and evento_datafim >= CURDATE() " +
+                                         "order by evento_datainicio asc");
         res.status(200).json({ eventos });
       } catch (erro) {
         console.error(erro);
@@ -600,4 +601,3 @@ router.post('/criar-evento', async (req, res) => {
      }) 
      module.exports = router;
           
-
