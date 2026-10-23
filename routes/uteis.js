@@ -85,4 +85,65 @@ router.get('/distancia/:lat1/:lon1/:lat2/:lon2/', async (req, res) => {
 
     }
       });
+/**
+ * @swagger
+ * /uteis/dateBr/{sigla}:
+ *   get:
+ *     summary: Converte a sigla do mês para a abreviação em português
+ *     tags:
+ *       - Uteis
+ *     parameters:
+ *       - name: sigla
+ *         in: path
+ *         description: Sigla do mês em inglês, em letras maiúsculas
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [JAN, FEV, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC]
+ *         example: APR
+ *     responses:
+ *       200:
+ *         description: Sigla do mês convertida
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucesso:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: string
+ *                   example: ABR
+ */
+router.get('/dateBr/:sigla', async (req, res) => {
+    switch (req.params.sigla) {
+        case 'JAN':
+            return res.json({ sucesso: true, data: 'JAN' });
+        case 'FEV':
+            return res.json({ sucesso: true, data: 'FEV' });
+        case 'MAR':
+            return res.json({ sucesso: true, data: 'MAR' });
+        case 'APR':
+            return res.json({ sucesso: true, data: 'ABR' });                            
+        // Adicione mais casos conforme necessário
+        case 'MAY':
+            return res.json({ sucesso: true, data: 'MAI' });
+        case 'JUN':
+            return res.json({ sucesso: true, data: 'JUN' });    
+        case 'JUL':
+            return res.json({ sucesso: true, data: 'JUL' });
+        case 'AUG':
+            return res.json({ sucesso: true, data: 'AGO' });
+        case 'SEP':
+            return res.json({ sucesso: true, data: 'SET' });
+        case 'OCT':
+            return res.json({ sucesso: true, data: 'OUT' });
+        case 'NOV':
+            return res.json({ sucesso: true, data: 'NOV' });
+        case 'DEC':
+            return res.json({ sucesso: true, data: 'DEZ' });                            
+    }
+
+});
 module.exports = router;
