@@ -37,8 +37,7 @@ const db = require('../database.js');
  */
 router.get('/listarEventosOrganizador/:organizadorId', async (req, res) => {
     const organizadorId = req.params.organizadorId;
-    const [eventos] = await db.query('SELECT * FROM eventos e ' +
-                               ' join evento_x_usuario eu on e.evento_id = eu.evento_x_usuario_eventoid ' +
+    const [eventos] = await db.query('SELECT * FROM eventos e ' +                               
                                ' where e.evento_responsavelid = ?', [parseInt(organizadorId, 10)]);
      if (eventos.length > 0) {
         res.json(eventos);
