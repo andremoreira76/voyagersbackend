@@ -147,5 +147,43 @@ router.put('/aprovarPagamento/:eventoId/:usuarioId', async (req, res) => {
         res.status(404).json({ message: 'Nenhum registro Atualizado'});
      }                             
 });
+/**
+ * @swagger
+ * /eventosorganizador/listarOrganizadores:  
+ *  get:
+ *    summary: Lista todos os organizadores
+ *   tags:
+ *    - EventosOrganizador
+ *  responses:
+ *    200:
+ *     description: Lista de organizadores
+ *    content:
+ *      application/json:
+ *       schema:
+ *        type: array
+ *      items:
+ *       $ref: '#/components/schemas/Organizador'
+ *   404:
+ *    description: Nenhum organizador encontrado
+ *   content:
+ *     application/json:
+ *      schema:
+ *      type: object
+ *     properties:
+ *    message:
+ *     type: string
+ *    example: Nenhum organizador encontrado
+ */   
+router.get('/listarOrganizadores', async (req, res) => {
+   const [organizadores] = await db.query('select usuario_id, usuario_nome '+
+                                          ' from usuarios u '+
+                                          ' join perfil_x_usuario xu on xu.perfil_x_usuario_usuarioid  = u.usuario_id' + 
+                                          ' where xu.perfil_x_usuario_perfilid =2');
+    if (organizadores.length > 0) {
+       res.json(organizadores);
+    }else{
+       res.status(404).json({ message: 'Nenhum organizador encontrado'});
+    }
+});
 
 module.exports = router;
