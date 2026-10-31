@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../database.js');
 // get usuarios
 /**
  * @swagger
@@ -145,5 +146,17 @@ router.get('/dateBr/:sigla', async (req, res) => {
             return res.json({ sucesso: true, data: 'DEZ' });                            
     }
 
+});
+router.post('/geraLog', async (req, res) => {
+    try {
+        const [resultado] = await db.query('INSERT INTO logs (log_tipo,log_valor,log_data,log_hora) ' +
+                                       ' VALUES (?, ?,current_date(),current_time())', [req.body.log_tipo, req.body.log_valor]);
+        return res.json({ sucesso: true, data: resultado });
+    } catch (erro) {
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: erro.message
+        });
+    }
 });
 module.exports = router;
