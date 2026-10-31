@@ -147,6 +147,57 @@ router.get('/dateBr/:sigla', async (req, res) => {
     }
 
 });
+/**
+ * @swagger
+ * /uteis/geraLog:
+ *   post:
+ *     summary: Gera um log no banco de dados
+ *     tags:
+ *       - Uteis
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - log_tipo
+ *               - log_valor
+ *             properties:
+ *               log_tipo:
+ *                 type: string
+ *                 example: INFO
+ *               log_valor:
+ *                 type: string
+ *                 example: Mensagem de log
+ *     responses:
+ *       200:
+ *         description: Log gerado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucesso:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   description: Resultado da inserção retornado pelo banco de dados
+ *       500:
+ *         description: Erro ao gerar o log
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sucesso:
+ *                   type: boolean
+ *                   example: false
+ *                 mensagem:
+ *                   type: string
+ *                   example: Erro ao inserir o log
+ */
 router.post('/geraLog', async (req, res) => {
     try {
         const [resultado] = await db.query('INSERT INTO logs (log_tipo,log_valor,log_data,log_hora) ' +
