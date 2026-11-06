@@ -163,6 +163,7 @@ router.get('/dateBr/:sigla', async (req, res) => {
  *             required:
  *               - log_tipo
  *               - log_valor
+ *               - log_ip
  *             properties:
  *               log_tipo:
  *                 type: string
@@ -200,8 +201,8 @@ router.get('/dateBr/:sigla', async (req, res) => {
  */
 router.post('/geraLog', async (req, res) => {
     try {
-        const [resultado] = await db.query('INSERT INTO logs (log_tipo,log_valor,log_data,log_hora) ' +
-                                       ' VALUES (?, ?,current_date(),current_time())', [req.body.log_tipo, req.body.log_valor]);
+        const [resultado] = await db.query('INSERT INTO logs (log_tipo,log_valor,log_data,log_hora,log_ip) ' +
+                                       ' VALUES (?, ?,current_date(),current_time(),?)', [req.body.log_tipo, req.body.log_valor, req.body.log_ip]);
         return res.json({ sucesso: true, data: resultado });
     } catch (erro) {
         return res.status(500).json({
