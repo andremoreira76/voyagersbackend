@@ -469,10 +469,10 @@ router.post('/criar-evento', async (req, res) => {
        const chuva = [6,9,10,11,12,40,45];
        const geada = [8,19,20,21,22];
        const nublado = [23,24,25,26];
-       const noite_limpa = [27,31,33];
-       const sol_nuvem = [28,30,44];
-       const noite_nuvem = [29];
-       const dia_limpo = [32,36];
+       //const noite_limpa = [27,31,33];
+       const sol_nuvem = [28,30,44,29];
+       // const noite_nuvem = [29];
+       const dia_limpo = [27,31,33,32,36];
 
        if(tempestade.includes(filtered.cod_condicao)){
           filtered.icone = 'cloud-lightning-rain';
@@ -489,15 +489,15 @@ router.post('/criar-evento', async (req, res) => {
        if(nublado.includes(filtered.cod_condicao)){
          filtered.icone = 'cloudy';
        }
-       if(noite_limpa.includes(filtered.cod_condicao)){
+      /* if(noite_limpa.includes(filtered.cod_condicao)){
          filtered.icone = 'moon';
-       }
+       }*/
        if(sol_nuvem.includes(filtered.cod_condicao)){
          filtered.icone = 'cloud-sun';
        }
-       if(noite_nuvem.includes(filtered.cod_condicao)){
+      /* if(noite_nuvem.includes(filtered.cod_condicao)){
          filtered.icone = 'cloud-moon';
-       }
+       }*/
        if(dia_limpo.includes(filtered.cod_condicao)){
          filtered.icone = 'sun';
        }         
