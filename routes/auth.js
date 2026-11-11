@@ -46,6 +46,7 @@ router.post("/login", async (req, res) => {
             `SELECT *
              FROM usuarios
              WHERE usuario_usuario = ?
+             AND usuario_status = 'ATIVO'
              LIMIT 1`,
             [usuario]
         );

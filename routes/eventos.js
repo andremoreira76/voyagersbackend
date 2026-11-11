@@ -113,7 +113,9 @@ router.post('/criar-evento', async (req, res) => {
       evento_status = 'ATIVO',
       evento_responsavel,
       evento_foneresponsavel,
-      evento_responsavelid
+      evento_responsavelid,
+      evento_linkgrupowhatsapp,
+      evento_gerenciavel
     } = req.body;
 
     if (!evento_nome || !evento_datainicio || !evento_datafim) {
@@ -157,7 +159,9 @@ router.post('/criar-evento', async (req, res) => {
       'evento_status',
       'evento_responsavel',
       'evento_foneresponsavel',
-      'evento_responsavelid'
+      'evento_responsavelid',
+      'evento_linkgrupowhatsapp',
+      'evento_gerenciavel'
     ];
 
     const valoresEventos = [
@@ -194,7 +198,9 @@ router.post('/criar-evento', async (req, res) => {
       evento_status,
       evento_responsavel ?? null,
       evento_foneresponsavel ?? null,
-      evento_responsavelid ?? null
+      evento_responsavelid ?? null,
+      evento_linkgrupowhatsapp ?? null,
+      evento_gerenciavel ?? null
     ];
 
     const [result] = await db.query(
