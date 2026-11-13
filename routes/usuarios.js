@@ -573,4 +573,54 @@ router.get('/', async (req, res) => {
       });
     }
   });
+  /**
+ * @swagger
+ * /usuarios/verificaEmail/{email}:
+ *   get:
+ *     summary: Verifica se um email existe no sistema
+ *     tags:
+ *       - Usuarios
+ *     parameters:
+ *       - name: email
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *     responses:
+ *       200:
+ *         description: Email encontrado.
+ *       404:
+ *         description: Email não encontrado.
+ *       500:
+ *         description: Erro interno do servidor.
+ */
+  router.get('/verificaEmail/:email', async (req, res) => {
+    try {
+      const email = req.params.email;
+      const [result] = await db.query(
+        'SELECT 1 FROM usuarios WHERE usuario_email = ? LIMIT 1',
+        [email]
+      );
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          sucesso: false,
+          mensagem: 'Email não encontrado.'
+        });
+      }
+
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Email encontrado.'
+      });
+    } catch (erro) {
+      console.error(erro);
+      return res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro ao verificar email.',
+        erro: erro.message
+      });
+    }
+  });
   module.exports = router;
