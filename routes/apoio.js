@@ -179,6 +179,7 @@ router.post('/cadastrarApoio', async (req, res) => {
     apoio_energia,
     apoio_banheiro,
     apoio_chuveiro,
+    apoio_barraca,
     fotos_x_apoio_fotomiatura,
     fotos_x_apoio_foto,
     fotos_x_apoio_datafoto
@@ -234,6 +235,7 @@ router.post('/cadastrarApoio', async (req, res) => {
         apoio_energia,
         apoio_banheiro,
         apoio_chuveiro,
+        apoio_barraca,
         'ATIVO',
         new Date()
       ]
@@ -560,6 +562,7 @@ router.put('/atualizarApoio/:apoioId', async (req, res) => {
     apoio_energia,
     apoio_banheiro,
     apoio_chuveiro,
+    apoio_barraca,
     apoio_status,
     fotos_x_apoio_fotomiatura,
     fotos_x_apoio_foto,
@@ -649,6 +652,7 @@ router.put('/atualizarApoio/:apoioId', async (req, res) => {
         apoio_energia = ?,
         apoio_banheiro = ?,
         apoio_chuveiro = ?,
+        apoio_barraca = ?,
         apoio_status = ?,
         apoio_atualizacao = ?
       WHERE apoio_id = ?`,
@@ -673,6 +677,7 @@ router.put('/atualizarApoio/:apoioId', async (req, res) => {
         apoio_energia,
         apoio_banheiro,
         apoio_chuveiro,
+        apoio_barraca,
         apoio_status ?? 'ATIVO',
         new Date(),
         apoioId
