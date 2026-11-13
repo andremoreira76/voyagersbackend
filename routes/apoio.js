@@ -100,6 +100,9 @@ router.get('/', async (req, res) => {
  *               apoio_chuveiro:
  *                 type: integer
  *                 example: 1
+ *               apoio_barraca:
+ *                 type: integer
+ *                 example: 1
  *               fotos_x_apoio_fotomiatura:
  *                 type: array
  *                 description: Miniaturas correspondentes, na mesma ordem, a fotos_x_apoio_foto.
@@ -213,7 +216,7 @@ router.post('/cadastrarApoio', async (req, res) => {
     await connection.beginTransaction();
 
     const [insertResult] = await connection.query(
-      'INSERT INTO apoio (apoio_nome, apoio_descricao, apoio_aceitarv, apoio_aceitapet, apoio_permitesom, apoio_voltagem, apoio_luzeletrica, apoio_aguapotavel, apoio_chuveiroquente, apoio_cidade, apoio_uf, apoio_wifi, apoio_endereco, apoio_latitude, apoio_longitude, apoio_telefone, apoio_responsavel, apoio_energia, apoio_banheiro, apoio_chuveiro, apoio_barraca,apoio_status, apoio_atualizacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO apoio (apoio_nome, apoio_descricao, apoio_aceitarv, apoio_aceitapet, apoio_permitesom, apoio_voltagem, apoio_luzeletrica, apoio_aguapotavel, apoio_chuveiroquente, apoio_cidade, apoio_uf, apoio_wifi, apoio_endereco, apoio_latitude, apoio_longitude, apoio_telefone, apoio_responsavel, apoio_energia, apoio_banheiro, apoio_chuveiro, apoio_barraca, apoio_status, apoio_atualizacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         apoio_nome,
         apoio_descricao,
