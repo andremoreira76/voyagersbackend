@@ -100,6 +100,11 @@ router.get('/', async (req, res) => {
  *               apoio_chuveiro:
  *                 type: integer
  *                 example: 1
+ *               apoio_certificado:
+ *                 type: string
+ *                 maxLength: 4
+ *                 nullable: true
+ *                 example: SIM
  *               fotos_x_apoio_fotomiatura:
  *                 type: array
  *                 description: Miniaturas correspondentes, na mesma ordem, a fotos_x_apoio_foto.
@@ -179,10 +184,17 @@ router.post('/cadastrarApoio', async (req, res) => {
     apoio_energia,
     apoio_banheiro,
     apoio_chuveiro,
+    apoio_certificado,
     fotos_x_apoio_fotomiatura,
     fotos_x_apoio_foto,
     fotos_x_apoio_datafoto
   } = req.body;
+
+  if (apoio_certificado != null && (typeof apoio_certificado !== 'string' || apoio_certificado.length > 4)) {
+    return res.status(400).json({
+      message: 'apoio_certificado deve ser uma string com no máximo 4 caracteres.'
+    });
+  }
 
   const miniaturas = fotos_x_apoio_fotomiatura === undefined
     ? []
@@ -212,7 +224,7 @@ router.post('/cadastrarApoio', async (req, res) => {
     await connection.beginTransaction();
 
     const [insertResult] = await connection.query(
-      'INSERT INTO apoio (apoio_nome, apoio_descricao, apoio_aceitarv, apoio_aceitapet, apoio_permitesom, apoio_voltagem, apoio_luzeletrica, apoio_aguapotavel, apoio_chuveiroquente, apoio_cidade, apoio_uf, apoio_wifi, apoio_endereco, apoio_latitude, apoio_longitude, apoio_telefone, apoio_responsavel, apoio_energia, apoio_banheiro, apoio_chuveiro, apoio_status, apoio_atualizacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO apoio (apoio_nome, apoio_descricao, apoio_aceitarv, apoio_aceitapet, apoio_permitesom, apoio_voltagem, apoio_luzeletrica, apoio_aguapotavel, apoio_chuveiroquente, apoio_cidade, apoio_uf, apoio_wifi, apoio_endereco, apoio_latitude, apoio_longitude, apoio_telefone, apoio_responsavel, apoio_energia, apoio_banheiro, apoio_chuveiro, apoio_certificado, apoio_status, apoio_atualizacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         apoio_nome,
         apoio_descricao,
@@ -234,6 +246,7 @@ router.post('/cadastrarApoio', async (req, res) => {
         apoio_energia,
         apoio_banheiro,
         apoio_chuveiro,
+        apoio_certificado ?? null,
         'ATIVO',
         new Date()
       ]
@@ -454,6 +467,11 @@ router.get('/listaFotosApoio/:apoioId', async (req, res) => {
  *               apoio_chuveiro:
  *                 type: integer
  *                 example: 1
+ *               apoio_certificado:
+ *                 type: string
+ *                 maxLength: 4
+ *                 nullable: true
+ *                 example: SIM
  *               apoio_status:
  *                 type: string
  *                 description: Se omitido, o status será definido como ATIVO.
@@ -560,11 +578,18 @@ router.put('/atualizarApoio/:apoioId', async (req, res) => {
     apoio_energia,
     apoio_banheiro,
     apoio_chuveiro,
+    apoio_certificado,
     apoio_status,
     fotos_x_apoio_fotomiatura,
     fotos_x_apoio_foto,
     fotos_x_apoio_datafoto
   } = req.body;
+
+  if (apoio_certificado != null && (typeof apoio_certificado !== 'string' || apoio_certificado.length > 4)) {
+    return res.status(400).json({
+      message: 'apoio_certificado deve ser uma string com no máximo 4 caracteres.'
+    });
+  }
 
   // Normaliza os arrays de fotos.
   const normalizarArray = (valor) => {
@@ -649,6 +674,7 @@ router.put('/atualizarApoio/:apoioId', async (req, res) => {
         apoio_energia = ?,
         apoio_banheiro = ?,
         apoio_chuveiro = ?,
+        apoio_certificado = ?,
         apoio_status = ?,
         apoio_atualizacao = ?
       WHERE apoio_id = ?`,
@@ -673,6 +699,7 @@ router.put('/atualizarApoio/:apoioId', async (req, res) => {
         apoio_energia,
         apoio_banheiro,
         apoio_chuveiro,
+        apoio_certificado ?? null,
         apoio_status ?? 'ATIVO',
         new Date(),
         apoioId

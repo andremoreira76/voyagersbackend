@@ -446,6 +446,11 @@ Prefixo: `/apoio`
 ### GET /apoio
 
 Lista todos os pontos de apoio da tabela `apoio`.
+Cada item inclui o campo `apoio_certificado` (string de até 4 caracteres, pode ser nulo).
+
+Os endpoints `POST /apoio/cadastrarApoio` e `PUT /apoio/atualizarApoio/{apoioId}`
+aceitam `apoio_certificado` no corpo. O campo é opcional; quando enviado, deve
+ser uma string com no máximo 4 caracteres.
 
 Resposta `200`:
 
