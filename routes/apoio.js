@@ -780,4 +780,149 @@ router.put('/atualizarApoio/:apoioId', async (req, res) => {
     }
   }
 });
+/**
+ * @swagger
+ * /apoio/criaCertificado:
+ *   post:
+ *     summary: Cria um certificado para um ponto de apoio
+ *     tags:
+ *       - Pontos de Apoio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - certificado_pontoid
+ *               - certificado_usuarioid
+ *             properties:
+ *               certificado_pontoid:
+ *                 type: integer
+ *                 example: 10
+ *               certificado_usuarioid:
+ *                 type: integer
+ *                 example: 123
+ *               certificado_existe:
+ *                 type: integer
+ *                 default: 0
+ *                 example: 1
+ *               certificado_gratuito:
+ *                 type: string
+ *                 maxLength: 100
+ *                 nullable: true
+ *                 example: "sim"
+ *               certificado_estrutura:
+ *                 type: string
+ *                 maxLength: 300
+ *                 nullable: true
+ *                 example: "Estrutura cadastrada"
+ *               certificado_ano:
+ *                 type: string
+ *                 maxLength: 4
+ *                 nullable: true
+ *                 example: "2026"
+ *               certificado_createat:
+ *                 type: string
+ *                 format: date-time
+ *                 nullable: true
+ *                 example: "2026-11-23T12:00:00.000Z"
+ *     responses:
+ *       201:
+ *         description: Certificado criado com sucesso
+ *       400:
+ *         description: Dados inválidos
+ *       500:
+ *         description: Erro ao criar certificado
+ */
+router.post('/criaCertificado', async (req, res) => {
+  const {
+    certificado_pontoid,
+    certificado_usuarioid,
+    certificado_existe = 0,
+    certificado_gratuito = null,
+    certificado_estrutura = null,
+    certificado_ano = null,
+    certificado_createat = new Date()
+  } = req.body;
+
+  const pontoId = Number(certificado_pontoid);
+
+  if (
+    certificado_pontoid === undefined ||
+    certificado_pontoid === null ||
+    certificado_pontoid === '' ||
+    !Number.isInteger(pontoId)
+  ) {
+    return res.status(400).json({
+      message: 'certificado_pontoid deve ser um número inteiro.'
+    });
+  }
+
+  const usuarioId = Number(certificado_usuarioid);
+  if (
+    certificado_usuarioid === undefined ||
+    certificado_usuarioid === null ||
+    certificado_usuarioid === '' ||
+    !Number.isInteger(usuarioId)
+  ) {
+    return res.status(400).json({
+      message: 'certificado_usuarioid é obrigatório e deve ser um número inteiro.'
+    });
+  }
+
+  if (!Number.isInteger(Number(certificado_existe))) {
+    return res.status(400).json({
+      message: 'certificado_existe deve ser um número inteiro.'
+    });
+  }
+
+  const camposTexto = [
+    ['certificado_gratuito', certificado_gratuito, 100],
+    ['certificado_estrutura', certificado_estrutura, 300],
+    ['certificado_ano', certificado_ano, 4]
+  ];
+
+  for (const [campo, valor, limite] of camposTexto) {
+    if (valor !== null && (typeof valor !== 'string' || valor.length > limite)) {
+      return res.status(400).json({
+        message: `${campo} deve ser um texto com no máximo ${limite} caracteres.`
+      });
+    }
+  }
+
+  try {
+    await db.query(
+      `INSERT INTO certificado (
+        certificado_pontoid,
+        certificado_usuarioid,
+        certificado_existe,
+        certificado_gratuito,
+        certificado_estrutura,
+        certificado_ano,
+        certificado_createat
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        pontoId,
+        usuarioId,
+        Number(certificado_existe),
+        certificado_gratuito,
+        certificado_estrutura,
+        certificado_ano,
+        certificado_createat
+      ]
+    );
+
+    return res.status(201).json({
+      message: 'Certificado criado com sucesso.',
+      certificado_pontoid: pontoId
+    });
+  } catch (erro) {
+    console.error(erro);
+    return res.status(500).json({
+      message: 'Erro ao criar certificado.',
+      erro: erro.message
+    });
+  }
+});
 module.exports = router;
