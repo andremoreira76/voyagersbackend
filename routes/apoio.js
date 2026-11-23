@@ -107,7 +107,7 @@ router.get('/', async (req, res) => {
  *                 type: string
  *                 maxLength: 4
  *                 nullable: true
- *                 example: SIM
+ *                 example: "2022"
  *               fotos_x_apoio_fotomiatura:
  *                 type: array
  *                 description: Miniaturas correspondentes, na mesma ordem, a fotos_x_apoio_foto.
@@ -228,8 +228,7 @@ router.post('/cadastrarApoio', async (req, res) => {
     await connection.beginTransaction();
 
     const [insertResult] = await connection.query(
-      'INSERT INTO apoio (apoio_nome, apoio_descricao, apoio_aceitarv, apoio_aceitapet, apoio_permitesom, apoio_voltagem, apoio_luzeletrica, apoio_aguapotavel, apoio_chuveiroquente, apoio_cidade, apoio_uf, apoio_wifi, apoio_endereco, apoio_latitude, apoio_longitude, apoio_telefone, apoio_responsavel, apoio_energia, apoio_banheiro, apoio_chuveiro, apoio_barraca, apoio_status, apoio_atualizacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      'INSERT INTO apoio (apoio_nome, apoio_descricao, apoio_aceitarv, apoio_aceitapet, apoio_permitesom, apoio_voltagem, apoio_luzeletrica, apoio_aguapotavel, apoio_chuveiroquente, apoio_cidade, apoio_uf, apoio_wifi, apoio_endereco, apoio_latitude, apoio_longitude, apoio_telefone, apoio_responsavel, apoio_energia, apoio_banheiro, apoio_chuveiro, apoio_certificado, apoio_status, apoio_atualizacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO apoio (apoio_nome, apoio_descricao, apoio_aceitarv, apoio_aceitapet, apoio_permitesom, apoio_voltagem, apoio_luzeletrica, apoio_aguapotavel, apoio_chuveiroquente, apoio_cidade, apoio_uf, apoio_wifi, apoio_endereco, apoio_latitude, apoio_longitude, apoio_telefone, apoio_responsavel, apoio_energia, apoio_banheiro, apoio_chuveiro, apoio_barraca, apoio_certificado, apoio_status, apoio_atualizacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         apoio_nome,
         apoio_descricao,
@@ -477,7 +476,7 @@ router.get('/listaFotosApoio/:apoioId', async (req, res) => {
  *                 type: string
  *                 maxLength: 4
  *                 nullable: true
- *                 example: SIM
+ *                 example: "2022"
  *               apoio_status:
  *                 type: string
  *                 description: Se omitido, o status será definido como ATIVO.
