@@ -623,4 +623,99 @@ router.get('/', async (req, res) => {
       });
     }
   });
+
+  /**
+   * @swagger
+   * /usuarios/{usuario_id}:
+   *   delete:
+   *     summary: Exclui um usuário e seus vínculos de perfil e eventos
+   *     tags:
+   *       - Usuarios
+   *     parameters:
+   *       - name: usuario_id
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: integer
+   *     responses:
+   *       200:
+   *         description: Usuário excluído com sucesso.
+   *       400:
+   *         description: Identificador inválido.
+   *       404:
+   *         description: Usuário não encontrado.
+   *       500:
+   *         description: Erro interno do servidor.
+   */
+  router.delete('/:usuario_id', async (req, res) => {
+    const { usuario_id } = req.params;
+
+    if (!/^[1-9]\d*$/.test(usuario_id)) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'Identificador do usuário inválido.'
+      });
+    }
+
+    let connection;
+    try {
+      connection = await db.getConnection();
+      await connection.beginTransaction();
+
+      const [usuarios] = await connection.query(
+        'SELECT usuario_id FROM usuarios WHERE usuario_id = ? FOR UPDATE',
+        [usuario_id]
+      );
+
+      if (usuarios.length === 0) {
+        await connection.rollback();
+        return res.status(404).json({
+          sucesso: false,
+          mensagem: 'Usuário não encontrado.'
+        });
+      }
+
+      await connection.query(
+        'DELETE FROM perfil_x_usuario WHERE perfil_x_usuario_usuarioid = ?',
+        [usuario_id]
+      );
+      await connection.query(
+        'DELETE FROM evento_x_usuario WHERE evento_x_usuario_usuario_id = ?',
+        [usuario_id]
+      );
+      const [resultado] = await connection.query(
+        'DELETE FROM usuarios WHERE usuario_id = ?',
+        [usuario_id]
+      );
+
+      if (resultado.affectedRows !== 1) {
+        throw new Error('Não foi possível excluir o usuário.');
+      }
+
+      await connection.commit();
+      return res.status(200).json({
+        sucesso: true,
+        mensagem: 'Usuário e seus vínculos foram excluídos com sucesso.'
+      });
+    } catch (erro) {
+      if (connection) {
+        try {
+          await connection.rollback();
+        } catch (erroRollback) {
+          console.error(erroRollback);
+        }
+      }
+      console.error(erro);
+      return res.status(500).json({
+        sucesso: false,
+        mensagem: 'Erro ao excluir usuário.',
+        erro: erro.message
+      });
+    } finally {
+      if (connection) {
+        connection.release();
+      }
+    }
+  });
+
   module.exports = router;
